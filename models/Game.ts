@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { GameState, Player, Card, PendingAction, Reaction } from '@/lib/types';
+import { GameState, Player, Card, PendingAction, Reaction, AIAgent } from '@/lib/types';
 
 // Prevent auto-generation of _id on subdocuments
 const CardSchema = new Schema<Card>({
@@ -10,6 +10,13 @@ const CardSchema = new Schema<Card>({
   ability: { type: String, required: true },
   imageUrl: String,
   historicalContext: String,
+}, { _id: false });
+
+const AIAgentSchema = new Schema<AIAgent>({
+  agentId: { type: String, required: true },
+  playerId: { type: String, required: true },
+  name: { type: String, required: true },
+  persona: { type: String, required: true },
 }, { _id: false });
 
 const PlayerSchema = new Schema<Player>({
@@ -47,6 +54,7 @@ export interface IGameStateDoc extends GameState, mongoose.Document {
 const GameStateSchema = new Schema<IGameStateDoc>({
   gameId: { type: String, required: true, unique: true, index: true },
   spaceId: String,
+  aiAgents: { type: [AIAgentSchema], default: [] },
   status: {
     type: String,
     enum: ['waiting', 'playing', 'finished'],
@@ -61,6 +69,12 @@ const GameStateSchema = new Schema<IGameStateDoc>({
   // Historical theme
   period: { type: String, required: true },
   character: { type: String, required: true },
+  actionNames: {
+    type: Map,
+    of: String,
+  },
+  backgroundUrl: String,
+  characterImageUrl: String,
 
   // Players
   players: [PlayerSchema],

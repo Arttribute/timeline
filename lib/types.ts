@@ -58,15 +58,26 @@ export interface Reaction {
   timestamp: number;
 }
 
+export interface AIAgent {
+  agentId: string;           // Agent Commons agent ID
+  playerId: string;          // Player ID in game
+  name: string;              // Agent's character name
+  persona: string;           // Historical persona description
+}
+
 export interface GameState {
   gameId: string;
   spaceId?: string;          // Agent Commons Space ID
+  aiAgents?: AIAgent[];      // AI agents created for this game
   status: 'waiting' | 'playing' | 'finished';
   phase: GamePhase;
 
   // Historical theme
   period: string;            // e.g., "Ancient Rome, 44 BCE"
   character: string;         // User's character description
+  actionNames?: Record<ActionType, string>; // Themed action names
+  backgroundUrl?: string;    // AI-generated background scene
+  characterImageUrl?: string; // AI-generated character portrait
 
   // Players
   players: Player[];
@@ -151,6 +162,7 @@ export interface PublicGameState {
   character: string;
   actionNames?: Record<ActionType, string>;
   backgroundUrl?: string;
+  characterImageUrl?: string;
 }
 
 export interface PrivatePlayerState {

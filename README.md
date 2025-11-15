@@ -19,6 +19,8 @@ Timeline combines the strategic depth of Coup with AI-generated content to creat
 
 - ✅ **True Social Deduction**: Bluff, challenge, and block like in Coup
 - ✅ **Dynamic Content Generation**: AI creates unique decks for any historical period
+- ✅ **Instant AI Opponents**: One-click creation of 2-5 AI agents with unique historically-themed personas
+- ✅ **Smart AI Agents**: Each agent has distinct strategic styles (aggressive, defensive, unpredictable)
 - ✅ **Multi-Agent Support**: Play with humans and AI agents via Agent Commons
 - ✅ **Information Hiding**: Oracle-based architecture ensures no player sees others' hands
 - ✅ **Turn-Based Orchestration**: Reactive turn system with challenge/block mechanics
@@ -73,6 +75,28 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 npm run dev
 # Open http://localhost:3000
 \`\`\`
+
+### Playing with AI Agents (Instant Start!)
+
+1. Visit http://localhost:3000
+2. Enter your name and choose a historical period
+3. Check "Play with AI Agents"
+4. Select number of opponents (2-5, recommended: 3)
+5. Click "Create & Play with AI Agents"
+
+The game will:
+- Generate historically-themed AI personas (e.g., "Marcus Brutus - a cunning Roman senator")
+- Create Agent Commons agents with unique strategic styles
+- Add them to your game automatically
+- **Start immediately** - you make the first move!
+
+Each AI agent will:
+- Have a unique persona matching your historical period
+- Use different strategic approaches (aggressive/defensive/unpredictable)
+- Make intelligent decisions based on game state
+- Remember claims and catch bluffs
+
+**Note**: AI agents persist with the game. You can replay with the same agents or swap them for other players later.
 
 ---
 

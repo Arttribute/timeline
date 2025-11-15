@@ -678,6 +678,9 @@ export function getPublicState(game: GameState): PublicGameState {
     reactionWindowEnd: game.reactionWindowEnd,
     period: game.period,
     character: game.character,
+    actionNames: game.actionNames,
+    backgroundUrl: game.backgroundUrl,
+    characterImageUrl: game.characterImageUrl,
   };
 }
 

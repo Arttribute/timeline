@@ -45,12 +45,18 @@ export async function generateDeck(
     // Generate new deck
     console.log(`Generating new deck for period: ${period}, character: ${character}`);
 
-    const [cards, actionNames, backgroundUrl, characterImageUrl] = await Promise.all([
+    // Generate card data, action names, and scene images in parallel
+    const [cardData, actionNames, backgroundUrl, characterImageUrl] = await Promise.all([
       generateThemedCards(period, character),
       generateActionNames(period),
       generateBackgroundImage(period, character),
       generateCharacterImage(character, period),
     ]);
+
+    console.log('Generating card artwork...');
+    // Generate card images (this is slow, so we do it after getting the base data)
+    const cards = await generateCardImages(cardData, period);
+    console.log('Card artwork generation complete');
 
     const deckTheme: DeckTheme = {
       period,

@@ -3,11 +3,19 @@
  * Handles Space creation, member management, tool exposure, and messaging
  */
 
+import { AIAgent } from './types';
+import OpenAI from 'openai';
+import { nanoid } from 'nanoid';
+
 const AGENT_COMMONS_API_URL =
   process.env.AGENT_COMMONS_API_URL ||
   'https://arttribute-commons-api-dev-848878149972.europe-west1.run.app';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 export interface SpaceToolSpec {
   name: string;
@@ -399,5 +407,199 @@ export async function getSpace(spaceId: string): Promise<any> {
   } catch (error) {
     console.error('Error getting space:', error);
     return null;
+  }
+}
+
+/**
+ * Generate AI agent personas based on historical period
+ */
+export async function generateAgentPersonas(
+  period: string,
+  count: number = 3
+): Promise<Array<{ name: string; persona: string }>> {
+  if (!openai) {
+    // Fallback personas if OpenAI not available
+    return [
+      { name: 'Marcus', persona: `A cunning strategist from ${period}` },
+      { name: 'Julia', persona: `A ruthless politician from ${period}` },
+      { name: 'Gaius', persona: `A shrewd merchant from ${period}` },
+    ].slice(0, count);
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a creative writer generating historically accurate character personas.',
+        },
+        {
+          role: 'user',
+          content: `Generate ${count} unique character personas for a social deduction game set in ${period}.
+
+Each character should have:
+1. A historically appropriate name
+2. A detailed persona (2-3 sentences) describing their background, personality, motivations, and playing style
+
+Return ONLY a JSON array with this structure:
+[
+  {
+    "name": "Character Name",
+    "persona": "Detailed persona description focusing on their strategic approach, deception style, and motivations"
+  }
+]
+
+Make each character distinct with different strategic approaches (e.g., one aggressive, one defensive, one unpredictable).`,
+        },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.9,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content generated');
+    }
+
+    const data = JSON.parse(content);
+    const personas = data.personas || data.characters || Object.values(data)[0];
+
+    return personas.slice(0, count);
+  } catch (error) {
+    console.error('Error generating personas:', error);
+    // Fallback
+    return [
+      { name: 'Marcus', persona: `A cunning strategist from ${period}` },
+      { name: 'Julia', persona: `A ruthless politician from ${period}` },
+      { name: 'Gaius', persona: `A shrewd merchant from ${period}` },
+    ].slice(0, count);
+  }
+}
+
+/**
+ * Create a single AI agent in Agent Commons
+ */
+export async function createAIAgent(
+  name: string,
+  persona: string,
+  gameId: string,
+  period: string,
+  ownerWallet: string = 'timeline_system'
+): Promise<{ success: boolean; agentId?: string; error?: string }> {
+  try {
+    const instructions = `You are ${name}, playing Timeline - a Coup-style social deduction game set in ${period}.
+
+PERSONA:
+${persona}
+
+GAME RULES:
+- This is a bluffing game where you can claim cards you don't have
+- Your goal is to be the last player standing
+- Use the game tools to execute actions, challenge opponents, and block actions
+- Always check your hand and perception before taking action
+- Be strategic about when to bluff, challenge, and block
+
+TOOLS AVAILABLE:
+- getAgentPerception: Get your current game state and strategic insights
+- executeAction: Perform game actions (income, tax, steal, assassinate, coup, etc.)
+- challengeAction: Challenge an opponent's claim
+- blockAction: Block an opponent's action with a claimed card
+
+IMPORTANT:
+- Always call getAgentPerception first to understand the current state
+- Follow your persona's strategic style
+- Make decisions based on game state, not just random choices
+- Remember claims made by others to catch bluffs`;
+
+    const response = await fetch(`${AGENT_COMMONS_API_URL}/v1/agents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        persona,
+        instructions,
+        owner: ownerWallet,
+        temperature: 0.8,
+        maxTokens: 2000,
+        topP: 0.95,
+        presencePenalty: 0.1,
+        frequencyPenalty: 0.1,
+        autonomyEnabled: true,
+        commonsOwned: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to create agent: ${error}`);
+    }
+
+    const data = await response.json();
+    const agentId = data.data?.agentId || data.agentId;
+
+    if (!agentId) {
+      throw new Error('No agentId returned from API');
+    }
+
+    return { success: true, agentId };
+  } catch (error) {
+    console.error('Error creating AI agent:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Create multiple AI agents for the game
+ */
+export async function createGameAgents(
+  gameId: string,
+  spaceId: string,
+  period: string,
+  count: number = 3,
+  ownerWallet: string = 'timeline_system'
+): Promise<{ success: boolean; agents?: AIAgent[]; error?: string }> {
+  try {
+    // Generate personas
+    const personas = await generateAgentPersonas(period, count);
+
+    const agents: AIAgent[] = [];
+
+    // Create each agent
+    for (const { name, persona } of personas) {
+      const playerId = `agent_${nanoid(8)}`;
+
+      // Create agent in Agent Commons
+      const result = await createAIAgent(name, persona, gameId, period, ownerWallet);
+
+      if (!result.success || !result.agentId) {
+        console.error(`Failed to create agent ${name}:`, result.error);
+        continue;
+      }
+
+      // Add agent to space as a member
+      await addPlayerToSpace(spaceId, playerId, name, 'agent');
+
+      agents.push({
+        agentId: result.agentId,
+        playerId,
+        name,
+        persona,
+      });
+    }
+
+    if (agents.length === 0) {
+      throw new Error('Failed to create any agents');
+    }
+
+    return { success: true, agents };
+  } catch (error) {
+    console.error('Error creating game agents:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
