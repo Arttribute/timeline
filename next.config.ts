@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Empty turbopack config to silence warnings
+  // Prevent server-side bundling of problematic packages
+  serverExternalPackages: ['pino', 'thread-stream', 'pino-pretty'],
+
+  // Empty turbopack config to acknowledge we're using it
   turbopack: {},
 
   webpack: (config, { isServer }) => {
@@ -14,15 +17,21 @@ const nextConfig: NextConfig = {
       dns: false,
     };
 
-    // Ignore test files
+    // Completely ignore test directories
     config.module.rules.push({
-      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
+      test: /node_modules\/thread-stream\/test\//,
       loader: 'ignore-loader',
     });
 
-    // Ignore problematic files in thread-stream
+    // Ignore all test files globally (including .mjs)
     config.module.rules.push({
-      test: /node_modules\/thread-stream\/.*\.(test|md|zip|LICENSE|sh|yml)$/,
+      test: /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/,
+      loader: 'ignore-loader',
+    });
+
+    // Ignore non-code files in node_modules
+    config.module.rules.push({
+      test: /node_modules\/.*\.(md|zip|LICENSE|sh|yml)$/,
       loader: 'ignore-loader',
     });
 

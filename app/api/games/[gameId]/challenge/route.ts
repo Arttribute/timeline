@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { gameId: string } }
+  { params }: { params: Promise<{ gameId: string }> }
 ) {
   try {
     await dbConnect();
@@ -21,7 +21,8 @@ export async function POST(
       );
     }
 
-    const result = await challengeAction(params.gameId, challengerId);
+    const { gameId } = await params;
+    const result = await challengeAction(gameId, challengerId);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });

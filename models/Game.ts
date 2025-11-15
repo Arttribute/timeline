@@ -40,7 +40,11 @@ const ReactionSchema = new Schema<Reaction>({
   timestamp: { type: Number, required: true },
 }, { _id: false });
 
-const GameStateSchema = new Schema<GameState>({
+export interface IGameStateDoc extends GameState, mongoose.Document {
+  _id: mongoose.Types.ObjectId;
+}
+
+const GameStateSchema = new Schema<IGameStateDoc>({
   gameId: { type: String, required: true, unique: true, index: true },
   spaceId: String,
   status: {
@@ -107,10 +111,6 @@ const GameStateSchema = new Schema<GameState>({
 // Indexes for performance
 GameStateSchema.index({ status: 1, createdAt: -1 });
 GameStateSchema.index({ spaceId: 1 });
-
-export interface IGameStateDoc extends GameState, mongoose.Document {
-  _id: mongoose.Types.ObjectId;
-}
 
 // Prevent model recompilation during hot reload
 const GameModel: Model<IGameStateDoc> =

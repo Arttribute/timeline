@@ -11,7 +11,11 @@ const CardSchema = new Schema<Card>({
   historicalContext: String,
 }, { _id: false });
 
-const DeckThemeSchema = new Schema<DeckTheme>({
+export interface IDeckThemeDoc extends DeckTheme, mongoose.Document {
+  _id: mongoose.Types.ObjectId;
+}
+
+const DeckThemeSchema = new Schema<IDeckThemeDoc>({
   period: { type: String, required: true },
   character: { type: String, required: true },
   cards: [CardSchema],
@@ -29,10 +33,6 @@ const DeckThemeSchema = new Schema<DeckTheme>({
 // Compound index for cache lookup
 DeckThemeSchema.index({ period: 1, character: 1 });
 DeckThemeSchema.index({ generatedAt: -1 });
-
-export interface IDeckThemeDoc extends DeckTheme, mongoose.Document {
-  _id: mongoose.Types.ObjectId;
-}
 
 const DeckThemeModel: Model<IDeckThemeDoc> =
   (mongoose.models.DeckTheme as Model<IDeckThemeDoc>) ||

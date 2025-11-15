@@ -6,12 +6,13 @@ export const runtime = 'nodejs';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { gameId: string } }
+  { params }: { params: Promise<{ gameId: string }> }
 ) {
   try {
     await dbConnect();
 
-    const result = await resolveAction(params.gameId);
+    const { gameId } = await params;
+    const result = await resolveAction(gameId);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import "./globals.css";
 import PrivyProviders from "@/components/providers/PrivyProviders";
 
@@ -15,8 +16,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Timeline - Social Deduction Card Game",
-  description: "A dynamic Coup-style social deduction game set in any historical period. Play with humans and AI agents.",
+  description:
+    "A dynamic social deduction game set in any historical period. Play with humans and AI agents.",
 };
+
+const space_mono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Helvetica", "Arial", "sans-serif"],
+});
 
 export default function RootLayout({
   children,
@@ -25,9 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={space_mono.className}>
         <PrivyProviders>{children}</PrivyProviders>
       </body>
     </html>
