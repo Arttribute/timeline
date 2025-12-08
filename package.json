@@ -16,7 +16,7 @@
     "lucide-react": "^0.553.0",
     "mongoose": "^8.8.4",
     "nanoid": "^5.0.9",
-    "next": "16.0.3",
+    "next": "16.0.7",
     "openai": "^4.77.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
